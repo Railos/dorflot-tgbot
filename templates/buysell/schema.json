@@ -1,0 +1,288 @@
+{
+  "code": "buysell",
+  "name": "Договор купли-продажи",
+  "fields": [
+    {
+      "name": "full_name",
+      "label": "Введите ФИО покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???",
+        "??????? ??? ????????"
+      ]
+    },
+    {
+      "name": "date",
+      "label": "Введите дату составления документа",
+      "type": "date",
+      "required": true,
+      "aliases": [
+        "????"
+      ]
+    },
+    {
+      "name": "product",
+      "label": "Введите полное название товара",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "?????",
+        "???????",
+        "??????"
+      ]
+    },
+    {
+      "name": "amount",
+      "label": "Введите количество товара",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??????????"
+      ]
+    },
+    {
+      "name": "price",
+      "label": "Введите цену товара",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????",
+        "?????????"
+      ]
+    },
+    {
+      "name": "payment_method",
+      "label": "Выберите способ оплаты",
+      "type": "payment_method",
+      "required": true,
+      "aliases": [
+        "?????? ??????",
+        "??????"
+      ]
+    },
+    {
+      "name": "car",
+      "label": "Введите название автомобиля",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????",
+        "??????????",
+        "????? ????"
+      ]
+    },
+    {
+      "name": "probeg",
+      "label": "Введите пробег автомобиля",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??????"
+      ]
+    },
+    {
+      "name": "address",
+      "label": "Введите адрес регистрации покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "?????",
+        "????? ???????????"
+      ]
+    },
+    {
+      "name": "passport_seriya",
+      "label": "Введите серию паспорта покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????? ????????",
+        "??????? ?????"
+      ]
+    },
+    {
+      "name": "passport_nomer",
+      "label": "Введите номер паспорта покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????? ????????",
+        "??????? ?????"
+      ]
+    },
+    {
+      "name": "passport_kem",
+      "label": "Введите кем выдан паспорт",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??? ?????",
+        "?????"
+      ]
+    },
+    {
+      "name": "passport_kogda",
+      "label": "Введите дату выдачи паспорта",
+      "type": "date",
+      "required": true,
+      "aliases": [
+        "????? ?????",
+        "???? ??????"
+      ]
+    },
+    {
+      "name": "passport_kod",
+      "label": "Введите код подразделения",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??? ?????????????",
+        "???"
+      ]
+    },
+    {
+      "name": "seller_signature",
+      "label": "Отправьте подпись продавца (фото или файл)",
+      "type": "image",
+      "required": true
+    },
+    {
+      "name": "seller_stamp",
+      "label": "печать продавца",
+      "type": "image",
+      "required": true
+    },
+    {
+      "name": "seller_name",
+      "label": "Имя продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????????",
+        "???????? ????????"
+      ]
+    },
+    {
+      "name": "seller_inn",
+      "label": "ИНН продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??? ????????"
+      ]
+    },
+    {
+      "name": "seller_ogrn",
+      "label": "ОГРН продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???? ????????"
+      ]
+    },
+    {
+      "name": "seller_address",
+      "label": "Юридический адрес продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????? ????????"
+      ]
+    },
+    {
+      "name": "seller_bank",
+      "label": "Банковские реквизиты продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???? ????????",
+        "?/? ????????"
+      ]
+    },
+    {
+      "name": "seller_phone",
+      "label": "Телефон/Факс продавца",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??????? ????????"
+      ]
+    },
+    {
+      "name": "buyer_company_name",
+      "label": "Название компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??????????",
+        "???????? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_address",
+      "label": "Юридический адрес покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "????? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_inn",
+      "label": "ИНН компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_ogrn",
+      "label": "ОГРН компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_schet",
+      "label": "Расчетный счет компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "?/? ??????????",
+        "???? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_bik",
+      "label": "БИК компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "??? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_bank",
+      "label": "Банк компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???? ??????????"
+      ]
+    },
+    {
+      "name": "buyer_director_name",
+      "label": "Генеральный директор компании покупателя",
+      "type": "string",
+      "required": true,
+      "aliases": [
+        "???????? ??????????",
+        "???????????? ??????????"
+      ]
+    }
+  ]
+}

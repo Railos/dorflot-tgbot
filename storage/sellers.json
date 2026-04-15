@@ -1,0 +1,79 @@
+{
+  "sellers": [
+    {
+      "id": "IP_verhozina",
+      "label": "ИП Верхозина",
+      "fields": {
+        "seller_name": "ИП Верхозина Дарья Владимировна",
+        "seller_inn": "ИНН: 450140709657",
+        "seller_kpp": "",
+        "seller_ogrn": "ОГРН 324861700053866",
+        "seller_address": "улица Крылова, д. 30, кв. 291, Ханты-Мансийский автономный округ, г. Сургут",
+        "seller_bank": "АО “Альфа-Банк”  р/с 40802810302870016513  к/с 30101810200000000593  БИК 044525593",
+        "seller_phone": "Телефон: 89227787804",
+        "seller_signature": "storage/signatures/IP_verhozina.png",
+        "seller_stamp": "storage/stamps/IP_verhozina.png"
+      }
+    },
+    {
+      "id": "IP_verhozin",
+      "label": "ИП Верхозин",
+      "fields": {
+        "seller_name": "ИП Верхозин Роман Николаевич",
+        "seller_inn": "ИНН: 860229602140",
+        "seller_kpp": "",
+        "seller_ogrn": "ОГРН 320861700031655",
+        "seller_address": "Ханты-Мансийский АО-Югра, г. Сургут",
+        "seller_bank": "АО «ТБанк»  р/с 40802810500006827955  к/с 30101810145250000974  БИК 044525974",
+        "seller_phone": "Телефон: 89227787804",
+        "seller_signature": "storage/signatures/IP_verhozin.png",
+        "seller_stamp": "storage/stamps/IP_verhozin.png"
+      }
+    },
+    {
+      "id": "ooo_ugoriya",
+      "label": "ООО Югория",
+      "fields": {
+        "seller_name": "ООО ПКФ «Югория»",
+        "seller_inn": "ИНН: 8602261685",
+        "seller_kpp": "КПП: 860201001",
+        "seller_ogrn": "ОГРН: 1158617009814",
+        "seller_address": "улица РАЦИОНАЛИЗАТОРОВ, д. Д. 27/2, кв./оф. ЭТАЖ 2 ОФ.1, Ханты-Мансийский автономный окр., г. СУРГУТ",
+        "seller_bank": "Расчётный счёт: 40702810938310000788  Название банка: АО “Альфа-Банк”  БИК: 046577964  Корреспондентский счёт: 30101810100000000964",
+        "seller_phone": "Директор: Тыщенко Данил Дмитриевич",
+        "seller_signature": "storage/signatures/ooo_ugoriya.png",
+        "seller_stamp": "storage/stamps/ooo_ugoriya.png"
+      }
+    },
+    {
+      "id": "ooo_components",
+      "label": "ООО «Надёжные компоненты»",
+      "fields": {
+        "seller_name": "ООО «Надёжные компоненты»",
+        "seller_inn": "ИНН: 9731145174",
+        "seller_kpp": "КПП: 773101001",
+        "seller_ogrn": "ОГРН: 1247700789918",
+        "seller_address": "121609, Г.МОСКВА, ВН.ТЕР.Г. МУНИЦИПАЛЬНЫЙ ОКРУГ КРЫЛАТСКОЕ, УЛ ОСЕННЯЯ, Д. 23, ПОМЕЩ. 1А",
+        "seller_bank": "Расчётный счёт: 40702810320000167680  Название банка: ООО “Банк Точка”  БИК: 044525104  Корреспондентский счёт: 30101810745374525104",
+        "seller_phone": "Директор: Фомченков Глеб Валериевич",
+        "seller_signature": "storage/signatures/ooo_components.png",
+        "seller_stamp": "storage/stamps/ooo_components.png"
+      }
+    },
+    {
+      "id": "ooo_kid",
+      "label": "ООО КИД",
+      "fields": {
+        "seller_name": "ООО КИД",
+        "seller_inn": "ИНН: 8602315404",
+        "seller_kpp": "КПП: 860201001",
+        "seller_ogrn": "ОГРН: 1248600007523",
+        "seller_address": "628416, Ханты-Мансийский Автономный округ - Югра, г. Сургут, пр-кт Ленина, д. 52/1",
+        "seller_bank": "Расчётный счёт: 40702810402870020651  Название банка: АО “Альфа-Банк”  БИК: 044525593  Корреспондентский счёт: 30101810200000000593",
+        "seller_phone": "Директор: Тыщенко Данил Дмитриевич",
+        "seller_signature": "storage/signatures/ooo_kid.png",
+        "seller_stamp": "storage/stamps/ooo_kid.png"
+      }
+    }
+  ]
+}

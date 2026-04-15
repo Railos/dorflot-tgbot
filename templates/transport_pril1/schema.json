@@ -1,0 +1,36 @@
+{
+  "code": "transport_pril1",
+  "name": "Приложение 1 к договору поставки",
+  "fields": [
+    {
+      "name": "date",
+      "label": "Введите дату приложения",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "car_model",
+      "label": "Введите модель автомобиля",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "vin_nomer",
+      "label": "Введите VIN номер",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "items",
+      "label": "Сколько позиций?",
+      "type": "items",
+      "required": true
+    },
+    {
+      "name": "predoplata",
+      "label": "Введите сумму которая была внесена в качестве предоплаты",
+      "type": "string",
+      "required": true
+    }
+  ]
+}

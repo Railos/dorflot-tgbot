@@ -1,0 +1,157 @@
+{
+  "code": "transport",
+  "name": "Договор поставки",
+  "fields": [
+    {
+      "name": "full_name",
+      "label": "Введите ФИО покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "initials",
+      "label": "Введите инициалы",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "date",
+      "label": "Введите дату составления докуменмта",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "address",
+      "label": "Введите адрес регистрации покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "passport_seriya",
+      "label": "Введите серию паспорта покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "passport_nomer",
+      "label": "Введите номер паспорта покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "passport_kem",
+      "label": "Введите кем выдан паспорт",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "passport_kogda",
+      "label": "Введите дату выдачи паспорта",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "passport_kod",
+      "label": "Введите код подразделения",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_signature",
+      "label": "Отправьте подпись продавца (фото или файл)",
+      "type": "image",
+      "required": true
+    },
+    {
+      "name": "seller_stamp",
+      "label": "Отправьте печать продавца (фото или файл)",
+      "type": "image",
+      "required": true
+    },
+    {
+      "name": "seller_name",
+      "label": "Имя продавца",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_inn",
+      "label": "ИНН продавца",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_ogrn",
+      "label": "ОГРН продавца",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_address",
+      "label": "Юридический адрес продавца",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_bank",
+      "label": "Банковские реквизиты продавца",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "seller_phone",
+      "label": "Телефон/Факс продавца",
+      "type": "string",
+      "required": true
+    },
+
+    {
+      "name": "buyer_company_name",
+      "label": "Название компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_address",
+      "label": "Юридический адрес покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_inn",
+      "label": "ИНН компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_ogrn",
+      "label": "ОГРН компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_schet",
+      "label": "Расчетный счет компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_bik",
+      "label": "БИК компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_bank",
+      "label": "Банк компании покупателя",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "buyer_director_name",
+      "label": "Генеральный директор компании покупателя",
+      "type": "string",
+      "required": true
+    }
+  ]
+}

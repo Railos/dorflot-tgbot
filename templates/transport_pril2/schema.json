@@ -1,0 +1,18 @@
+{
+  "code": "transport_pril2",
+  "name": "Приложение 2 к договору поставки",
+  "fields": [
+    {
+      "name": "date",
+      "label": "Введите дату приложения 2",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "seller_signature",
+      "label": "Отправьте подпись продавца (фото или файл)",
+      "type": "image",
+      "required": true
+    }
+  ]
+}
