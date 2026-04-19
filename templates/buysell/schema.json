@@ -73,6 +73,12 @@
       ]
     },
     {
+      "name": "vin_nomer",
+      "label": "Введите VIN номер",
+      "type": "string",
+      "required": true
+    },
+    {
       "name": "probeg",
       "label": "Введите пробег автомобиля",
       "type": "string",

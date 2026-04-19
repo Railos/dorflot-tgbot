@@ -50,3 +50,30 @@ def buyer_type_keyboard():
             [InlineKeyboardButton(text="Юрлицо", callback_data="buyer:legal")],
         ]
     )
+
+
+def output_format_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="DOCX (без подписи/печати)", callback_data="out:docx")],
+            [InlineKeyboardButton(text="PDF (с подписью/печатью)", callback_data="out:pdf")],
+        ]
+    )
+
+
+def main_menu_keyboard(*, can_start: bool) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text="📄 Шаблон", callback_data="menu:template")],
+        [InlineKeyboardButton(text="🧾 Результат", callback_data="menu:output_format")],
+        [InlineKeyboardButton(text="🏷️ Продавец", callback_data="menu:seller")],
+        [InlineKeyboardButton(text="👤 Покупатель", callback_data="menu:buyer_type")],
+        [InlineKeyboardButton(text="✍️ Заполнение", callback_data="menu:input_mode")],
+    ]
+
+    start_button = InlineKeyboardButton(
+        text="▶️ Начать" if can_start else "▶️ Начать (выберите все опции)",
+        callback_data="menu:start",
+    )
+    reset_button = InlineKeyboardButton(text="🔄 Сброс", callback_data="menu:reset")
+    rows.append([start_button, reset_button])
+    return InlineKeyboardMarkup(inline_keyboard=rows)

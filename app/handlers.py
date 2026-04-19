@@ -11,6 +11,8 @@ from app.document_generator import generate_document
 from app.keyboards import (
     buyer_type_keyboard,
     input_mode_keyboard,
+    main_menu_keyboard,
+    output_format_keyboard,
     payment_method_keyboard,
     result_keyboard,
     sellers_keyboard,
@@ -24,6 +26,80 @@ from app.template_loader import get_template_by_code, load_all_templates
 from app.utils import generate_output_filename
 
 router = Router()
+
+WELCOME_TEXT = (
+    "Добро пожаловать в DocumentFiller.\n\n"
+    "Выбранные опции:\n"
+    "📄 Шаблон: {template}\n"
+    "🧾 Результат: {output_format}\n"
+    "🏷️ Продавец: {seller}\n"
+    "👤 Покупатель: {buyer_type}\n"
+    "✍️ Заполнение: {input_mode}\n"
+)
+
+
+def _format_selected_template(data: dict) -> str:
+    return data.get("template_code") or "—"
+
+
+def _format_selected_seller(data: dict) -> str:
+    return data.get("seller_label") or "—"
+
+
+def _format_selected_buyer_type(data: dict) -> str:
+    value = data.get("buyer_type")
+    if value == "individual":
+        return "Физлицо"
+    if value == "legal":
+        return "Юрлицо"
+    return "—"
+
+
+def _format_selected_input_mode(data: dict) -> str:
+    value = data.get("input_mode")
+    if value == "manual":
+        return "Вручную"
+    if value == "text":
+        return "Одним текстом"
+    return "—"
+
+
+def _format_selected_output_format(data: dict) -> str:
+    value = data.get("output_format")
+    if value == "docx":
+        return "DOCX (без подписи/печати)"
+    if value == "pdf":
+        return "PDF (с подписью/печатью)"
+    return "—"
+
+
+def _can_start_filling(data: dict) -> bool:
+    return bool(
+        data.get("template_code")
+        and data.get("seller_id")
+        and data.get("buyer_type")
+        and data.get("input_mode")
+        and data.get("output_format")
+    )
+
+
+async def show_main_menu(message: Message, state: FSMContext, *, edit: bool = False) -> None:
+    data = await state.get_data()
+    text = WELCOME_TEXT.format(
+        template=_format_selected_template(data),
+        output_format=_format_selected_output_format(data),
+        seller=_format_selected_seller(data),
+        buyer_type=_format_selected_buyer_type(data),
+        input_mode=_format_selected_input_mode(data),
+    )
+    keyboard = main_menu_keyboard(can_start=_can_start_filling(data))
+    if edit:
+        try:
+            await message.edit_text(text, reply_markup=keyboard)
+            return
+        except Exception:
+            pass
+    await message.answer(text, reply_markup=keyboard)
 
 
 async def save_image_from_message(message: Message) -> str | None:
@@ -88,6 +164,7 @@ BUYER_INDIVIDUAL_FIELDS = {
 
 BUYER_LEGAL_FIELDS = {
     "buyer_company_name",
+    "buyer_address",
     "buyer_inn",
     "buyer_ogrn",
     "buyer_bik",
@@ -157,6 +234,14 @@ async def proceed_to_input_mode(message: Message, state: FSMContext) -> None:
     )
 
 
+async def proceed_to_output_format(message: Message, state: FSMContext) -> None:
+    await state.set_state(FillDocumentState.selecting_output_format)
+    await message.answer(
+        "Выберите формат результата:",
+        reply_markup=output_format_keyboard(),
+    )
+
+
 async def proceed_to_buyer_type(message: Message, state: FSMContext, fields: list[dict], answers: dict) -> None:
     await state.set_state(FillDocumentState.selecting_buyer_type)
     await state.update_data(fields=fields, answers=answers, current_index=0)
@@ -202,6 +287,7 @@ def to_number(value) -> float | None:
 async def send_generated_documents_batch(message: Message, template_queue: list[str], answers: dict) -> None:
     await message.answer("Документы готовятся...")
     cleanup_paths: list[str] = []
+    output_format = answers.get("output_format", "docx")
     for code in template_queue:
         _, template_path = get_template_by_code(code)
         buyer_type = answers.get("buyer_type")
@@ -209,22 +295,24 @@ async def send_generated_documents_batch(message: Message, template_queue: list[
         generated = generate_document(
             template_path,
             answers,
-            need_pdf=True,
+            need_pdf=(output_format == "pdf"),
             document_type=code,
             seller_name=answers.get("seller_name"),
         )
         cleanup_paths.append(generated["docx_path"])
 
-        docx_file = FSInputFile(generated["docx_path"])
-        await message.answer_document(docx_file, caption="Готовый DOCX")
-
-        if generated["pdf_path"]:
-            cleanup_paths.append(generated["pdf_path"])
-            pdf_file = FSInputFile(generated["pdf_path"])
-            await message.answer_document(
-                pdf_file,
-                caption="Готовый PDF",
-            )
+        if output_format == "pdf":
+            if generated["pdf_path"]:
+                cleanup_paths.append(generated["pdf_path"])
+                pdf_file = FSInputFile(generated["pdf_path"])
+                await message.answer_document(pdf_file, caption="Готовый PDF")
+            else:
+                await message.answer("Не удалось получить PDF, отправляю DOCX.")
+                docx_file = FSInputFile(generated["docx_path"])
+                await message.answer_document(docx_file, caption="Готовый DOCX")
+        else:
+            docx_file = FSInputFile(generated["docx_path"])
+            await message.answer_document(docx_file, caption="Готовый DOCX")
 
     await message.answer("Документы готовы.", reply_markup=result_keyboard())
     asyncio.create_task(delete_files_later(cleanup_paths, delay_seconds=600))
@@ -252,26 +340,19 @@ async def handle_items_flow(message: Message, state: FSMContext, data: dict) -> 
             return True
 
         items_state = {
-            "step": "articul",
+            "step": "name",
             "total": total,
             "index": 0,
             "items": [],
             "current": {},
         }
         await state.update_data(items_state=items_state)
-        await message.answer("Позиция 1: артикул")
+        await message.answer("Позиция 1: наименование")
         return True
 
     total = items_state["total"]
     index = items_state["index"]
     current = items_state["current"]
-
-    if step == "articul":
-        current["articul"] = message.text.strip()
-        items_state["step"] = "name"
-        await state.update_data(items_state=items_state)
-        await message.answer(f"Позиция {index + 1}: наименование")
-        return True
 
     if step == "name":
         current["name"] = message.text.strip()
@@ -291,7 +372,6 @@ async def handle_items_flow(message: Message, state: FSMContext, data: dict) -> 
         items_state["items"].append(
             {
                 "n": index + 1,
-                "articul": current["articul"],
                 "name": current["name"],
                 "price": current["price"],
             }
@@ -330,9 +410,9 @@ async def handle_items_flow(message: Message, state: FSMContext, data: dict) -> 
 
         items_state["index"] = index
         items_state["current"] = {}
-        items_state["step"] = "articul"
+        items_state["step"] = "name"
         await state.update_data(items_state=items_state)
-        await message.answer(f"Позиция {index + 1}: артикул")
+        await message.answer(f"Позиция {index + 1}: наименование")
         return True
 
     return False
@@ -357,53 +437,143 @@ async def delete_files_later(paths: list[str], delay_seconds: int) -> None:
 
 
 @router.message(CommandStart())
-async def start_handler(message: Message):
+async def start_handler(message: Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(message, state)
+
+
+@router.callback_query(F.data == "menu:reset")
+async def menu_reset(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:template")
+async def menu_select_template(callback: CallbackQuery, state: FSMContext):
     templates = load_all_templates()
     if not templates:
-        await message.answer("Шаблоны пока не загружены.")
+        await callback.message.answer("Шаблоны не найдены.")
+        await callback.answer()
+        return
+    await callback.message.edit_text("Выберите шаблон документа:", reply_markup=templates_keyboard(templates))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:seller")
+async def menu_select_seller(callback: CallbackQuery, state: FSMContext):
+    sellers = load_sellers()
+    if not sellers:
+        await callback.message.answer("Продавцы не найдены (storage/sellers.json).")
+        await callback.answer()
+        return
+    await callback.message.edit_text("Выберите продавца:", reply_markup=sellers_keyboard(sellers))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:buyer_type")
+async def menu_select_buyer_type(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Выберите тип покупателя:", reply_markup=buyer_type_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:input_mode")
+async def menu_select_input_mode(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Как заполняем документ?", reply_markup=input_mode_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:output_format")
+async def menu_select_output_format(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Выберите формат результата:", reply_markup=output_format_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:start")
+async def menu_start_filling(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    if not _can_start_filling(data):
+        await callback.message.answer("Сначала выберите все опции в меню.")
+        await callback.answer()
         return
 
-    await message.answer(
-        "Выберите шаблон документа:",
-        reply_markup=templates_keyboard(templates),
+    template_code = data["template_code"]
+    template_queue = (
+        ["transport", "transport_pril1", "transport_pril2"] if template_code == "transport" else [template_code]
     )
 
-
-@router.callback_query(F.data.startswith("tpl:"))
-async def select_template(callback: CallbackQuery, state: FSMContext):
-    code = callback.data.split(":", 1)[1]
-    template_queue = ["transport", "transport_pril1", "transport_pril2"] if code == "transport" else [code]
-
-    fields = []
-    seen = set()
-    for template_code in template_queue:
-        schema, _ = get_template_by_code(template_code)
+    fields: list[dict] = []
+    seen: set[str] = set()
+    for code in template_queue:
+        schema, _ = get_template_by_code(code)
         for field in schema.fields:
             if field.name in seen:
                 continue
             seen.add(field.name)
             fields.append(field.model_dump())
 
-    await state.update_data(
-        template_queue=template_queue,
-        fields=fields,
-        current_index=0,
-        answers={},
-        seller_selected=False,
-    )
-
     sellers = load_sellers()
-    seller_fields = get_seller_field_names(fields, sellers)
-    if sellers and seller_fields:
-        await state.set_state(FillDocumentState.selecting_seller)
-        await callback.message.answer(
-            "Выберите продавца:",
-            reply_markup=sellers_keyboard(sellers),
-        )
+    seller = get_seller_by_id(sellers, data["seller_id"])
+    if not seller:
+        await callback.message.answer("Продавец не найден, выберите снова.")
+        await show_main_menu(callback.message, state)
         await callback.answer()
         return
 
-    await proceed_to_buyer_type(callback.message, state, fields, {})
+    remaining_fields, seller_answers = apply_seller_to_fields(fields, seller)
+    answers = seller_answers
+    answers["buyer_type"] = data["buyer_type"]
+    answers["output_format"] = data["output_format"]
+
+    filtered_fields = apply_buyer_type_filter(remaining_fields, data["buyer_type"])
+    remaining_fields = prepare_fields_for_initials(filtered_fields, answers)
+    if data["output_format"] == "docx":
+        remaining_fields = [field for field in remaining_fields if field.get("type") != "image"]
+
+    await state.update_data(
+        template_queue=template_queue,
+        fields=remaining_fields,
+        current_index=0,
+        answers=answers,
+    )
+
+    if data["input_mode"] == "manual":
+        await proceed_to_filling(callback.message, state, remaining_fields, answers)
+        await callback.answer()
+        return
+
+    missing = []
+    for field in remaining_fields:
+        name = field.get("name")
+        if not name or name in answers:
+            continue
+        if field.get("type") == "image":
+            continue
+        label = field.get("label") or name
+        missing.append(f"- {name}: {label}")
+
+    if missing:
+        await callback.message.answer("Поля для заполнения:\n" + "\n".join(missing))
+
+    await state.set_state(FillDocumentState.collecting_text)
+    await callback.message.answer("Отправьте одним сообщением текст с данными.")
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("tpl:"))
+async def select_template(callback: CallbackQuery, state: FSMContext):
+    code = callback.data.split(":", 1)[1]
+    await state.update_data(
+        template_code=code,
+        template_queue=None,
+        fields=None,
+        current_index=None,
+        answers=None,
+    )
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
     await callback.answer()
 
 
@@ -418,76 +588,36 @@ async def select_seller(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
 
-    data = await state.get_data()
-    fields = data.get("fields", [])
-    answers = data.get("answers", {})
-
-    remaining_fields, seller_answers = apply_seller_to_fields(fields, seller)
-    answers.update(seller_answers)
-
-    await state.update_data(
-        fields=remaining_fields,
-        current_index=0,
-        answers=answers,
-        seller_selected=True,
-    )
-    await proceed_to_buyer_type(callback.message, state, remaining_fields, answers)
+    await state.update_data(seller_id=seller.id, seller_label=seller.label)
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("buyer:"))
 async def select_buyer_type(callback: CallbackQuery, state: FSMContext):
     buyer_type = callback.data.split(":", 1)[1]
-    data = await state.get_data()
-    fields = data.get("fields", [])
-    answers = data.get("answers", {})
-    template_queue = data.get("template_queue", [])
-
-    filtered_fields = apply_buyer_type_filter(fields, buyer_type)
-    remaining_fields = prepare_fields_for_initials(filtered_fields, answers)
-    answers["buyer_type"] = buyer_type
-
-    await state.set_state(FillDocumentState.selecting_input_mode)
-    await state.update_data(
-        fields=remaining_fields,
-        current_index=0,
-        answers=answers,
-        buyer_type=buyer_type,
-    )
-
-    await proceed_to_input_mode(callback.message, state)
+    await state.update_data(buyer_type=buyer_type)
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("input:"))
 async def select_input_mode(callback: CallbackQuery, state: FSMContext):
     choice = callback.data.split(":", 1)[1]
-    data = await state.get_data()
-    fields = data.get("fields", [])
-    answers = data.get("answers", {})
+    await state.update_data(input_mode=choice)
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
+    await callback.answer()
 
-    if choice == "manual":
-        await proceed_to_filling(callback.message, state, fields, answers)
-        await callback.answer()
-        return
 
-    missing = []
-    for field in fields:
-        name = field.get("name")
-        if not name or name in answers:
-            continue
-        if field.get("type") == "image":
-            continue
-        label = field.get("label") or name
-        missing.append(f"- {name}: {label}")
-
-    if missing:
-        await callback.message.answer(
-            "Поля для заполнения:\n" + "\n".join(missing)
-        )
-
-    await state.set_state(FillDocumentState.collecting_text)
-    await callback.message.answer("Отправьте одним сообщением текст с данными.")
+@router.callback_query(F.data.startswith("out:"))
+async def select_output_format(callback: CallbackQuery, state: FSMContext):
+    output_format = callback.data.split(":", 1)[1]
+    await state.update_data(output_format=output_format)
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state, edit=True)
     await callback.answer()
 
 
@@ -562,11 +692,8 @@ async def select_payment_method(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "create_again")
 async def create_again(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    templates = load_all_templates()
-    await callback.message.answer(
-        "Выберите шаблон документа:",
-        reply_markup=templates_keyboard(templates),
-    )
+    await state.set_state(FillDocumentState.configuring)
+    await show_main_menu(callback.message, state)
     await callback.answer()
 
 

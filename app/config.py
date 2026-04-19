@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     bot_token: str
     openai_api_key: str
     openai_model: str = "gpt-4o"
+    libreoffice_path: str | None = None
     templates_dir: str = "templates"
     generated_dir: str = "storage/generated"
     temp_dir: str = "storage/temp"
