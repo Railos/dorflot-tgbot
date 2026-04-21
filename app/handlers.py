@@ -7,6 +7,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from app.config import settings
+from app.counters import allocate_next_transport_number, commit_transport_number
 from app.document_generator import generate_document
 from app.keyboards import (
     buyer_type_keyboard,
@@ -262,7 +263,7 @@ async def proceed_to_filling(message: Message, state: FSMContext, fields: list[d
 
     if not remaining_fields:
         template_queue = (await state.get_data()).get("template_queue", [])
-        await send_generated_documents_batch(message, template_queue, answers)
+        await send_generated_documents_batch(message, state, template_queue, answers)
         await state.clear()
         return
 
@@ -284,7 +285,12 @@ def to_number(value) -> float | None:
     return None
 
 
-async def send_generated_documents_batch(message: Message, template_queue: list[str], answers: dict) -> None:
+async def send_generated_documents_batch(
+    message: Message,
+    state: FSMContext,
+    template_queue: list[str],
+    answers: dict,
+) -> None:
     await message.answer("Документы готовятся...")
     cleanup_paths: list[str] = []
     output_format = answers.get("output_format", "docx")
@@ -313,6 +319,15 @@ async def send_generated_documents_batch(message: Message, template_queue: list[
         else:
             docx_file = FSInputFile(generated["docx_path"])
             await message.answer_document(docx_file, caption="Готовый DOCX")
+
+    if "transport" in template_queue:
+        try:
+            data = await state.get_data()
+            reserved = data.get("reserved_transport_number")
+            if reserved:
+                commit_transport_number(message.from_user.id, int(reserved))
+        except Exception:
+            logging.exception("Failed to commit transport counter.")
 
     await message.answer("Документы готовы.", reply_markup=result_keyboard())
     asyncio.create_task(delete_files_later(cleanup_paths, delay_seconds=600))
@@ -393,7 +408,7 @@ async def handle_items_flow(message: Message, state: FSMContext, data: dict) -> 
             )
 
             if current_index >= len(fields):
-                await send_generated_documents_batch(message, template_queue, answers)
+                await send_generated_documents_batch(message, state, template_queue, answers)
                 await state.clear()
                 return True
 
@@ -527,6 +542,13 @@ async def menu_start_filling(callback: CallbackQuery, state: FSMContext):
     answers["buyer_type"] = data["buyer_type"]
     answers["output_format"] = data["output_format"]
 
+    if template_code == "transport":
+        reserved = data.get("reserved_transport_number")
+        if not reserved:
+            reserved = allocate_next_transport_number(callback.from_user.id)
+            await state.update_data(reserved_transport_number=reserved)
+        answers["nomer"] = reserved
+
     filtered_fields = apply_buyer_type_filter(remaining_fields, data["buyer_type"])
     remaining_fields = prepare_fields_for_initials(filtered_fields, answers)
     if data["output_format"] == "docx":
@@ -567,6 +589,7 @@ async def select_template(callback: CallbackQuery, state: FSMContext):
     code = callback.data.split(":", 1)[1]
     await state.update_data(
         template_code=code,
+        reserved_transport_number=None,
         template_queue=None,
         fields=None,
         current_index=None,
@@ -665,7 +688,7 @@ async def select_payment_method(callback: CallbackQuery, state: FSMContext):
         current_index += 1
 
     if current_index >= len(fields):
-        await send_generated_documents_batch(callback.message, template_queue, answers)
+        await send_generated_documents_batch(callback.message, state, template_queue, answers)
         await state.clear()
         await callback.answer()
         return
@@ -748,7 +771,7 @@ async def fill_document(message: Message, state: FSMContext):
         current_index += 1
 
     if current_index >= len(fields):
-        await send_generated_documents_batch(message, template_queue, answers)
+        await send_generated_documents_batch(message, state, template_queue, answers)
         await state.clear()
         return
 
@@ -763,61 +786,5 @@ async def fill_document(message: Message, state: FSMContext):
         return
     if next_field["type"] == "payment_method":
         await message.answer("Выберите способ оплаты:", reply_markup=payment_method_keyboard())
-        return
-    await message.answer(next_field["label"])
-@router.message(FillDocumentState.filling)
-async def fill_document(message: Message, state: FSMContext):
-    data = await state.get_data()
-    if await handle_items_flow(message, state, data):
-        return
-
-    fields = data["fields"]
-    current_index = data["current_index"]
-    answers = data["answers"]
-    template_queue = data.get("template_queue", [])
-
-    current_field = fields[current_index]
-    field_type = current_field["type"]
-
-    if field_type == "items":
-        await prompt_items_count(message, state)
-        return
-
-    if field_type == "image":
-        image_path = await save_image_from_message(message)
-        if not image_path:
-            await message.answer("??????????, ????????? ??????????? ??????? (???? ??? ????).")
-            return
-        value = {"_type": "image", "path": image_path, "width_mm": 20}
-    else:
-        try:
-            value = parse_field_value(field_type, message.text)
-        except Exception:
-            await message.answer(f"???????????? ????????. {current_field['label']}")
-            return
-
-    answers[current_field["name"]] = value
-    if current_field["name"] == "full_name" and not answers.get("initials"):
-        computed = compute_initials(str(value))
-        if computed:
-            answers["initials"] = computed
-
-    current_index += 1
-    while current_index < len(fields) and fields[current_index]["name"] == "initials" and answers.get("initials"):
-        current_index += 1
-
-    if current_index >= len(fields):
-        await send_generated_documents_batch(message, template_queue, answers)
-        await state.clear()
-        return
-
-    await state.update_data(
-        current_index=current_index,
-        answers=answers,
-    )
-
-    next_field = fields[current_index]
-    if next_field["type"] == "items":
-        await prompt_items_count(message, state)
         return
     await message.answer(next_field["label"])
