@@ -28,7 +28,7 @@ def allocate_next_transport_number(user_id: int) -> int:
     with _lock:
         data = _load()
         transport = data.get("transport", {})
-        current = int(transport.get(str(user_id), 0) or 0)
+        current = int(transport.get(str(user_id), 139) or 139)
         return current + 1
 
 

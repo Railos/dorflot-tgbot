@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from docx.shared import Mm
@@ -31,8 +32,74 @@ def render_docx_to_path(template_path: str, context: dict, *, output_path: str, 
     doc = DocxTemplate(template_path)
     doc.render(prepare_context(context, doc, include_images=include_images))
     doc.save(output_path)
+    if include_images:
+        _remove_underline_from_image_runs(output_path)
 
     return output_path
+
+
+def _remove_underline_from_image_runs(docx_path: str) -> None:
+    """
+    Word can render an underline/line under an InlineImage if the placeholder run (or its paragraph style)
+    had underline formatting applied. This post-process removes underline formatting from runs that contain
+    drawings so signature/stamp images don't have a line drawn through/under them.
+    """
+
+    namespaces = {
+        "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+    }
+
+    def strip_underline(xml_bytes: bytes) -> bytes:
+        try:
+            root = ET.fromstring(xml_bytes)
+        except ET.ParseError:
+            return xml_bytes
+
+        changed = False
+        for run in root.findall(".//w:r", namespaces):
+            if run.find(".//w:drawing", namespaces) is None:
+                continue
+            rpr = run.find("w:rPr", namespaces)
+            if rpr is None:
+                continue
+            underline = rpr.find("w:u", namespaces)
+            if underline is not None:
+                rpr.remove(underline)
+                changed = True
+
+        if not changed:
+            return xml_bytes
+        return ET.tostring(root, encoding="utf-8", xml_declaration=False)
+
+    # Patch common Word XML parts where images might exist.
+    target_names: list[str] = ["word/document.xml"]
+    try:
+        import zipfile
+
+        with zipfile.ZipFile(docx_path, "r") as zin:
+            names = zin.namelist()
+            for name in names:
+                if name.startswith("word/header") and name.endswith(".xml"):
+                    target_names.append(name)
+                if name.startswith("word/footer") and name.endswith(".xml"):
+                    target_names.append(name)
+
+            updated: dict[str, bytes] = {}
+            for name in target_names:
+                if name in names:
+                    updated[name] = strip_underline(zin.read(name))
+
+            if not updated:
+                return
+
+            entries = {name: zin.read(name) for name in names if name not in updated}
+            entries.update(updated)
+
+        with zipfile.ZipFile(docx_path, "w", compression=zipfile.ZIP_DEFLATED) as zout:
+            for name, data in entries.items():
+                zout.writestr(name, data)
+    except OSError:
+        logging.exception("Failed to post-process DOCX for image underline cleanup: %s", docx_path)
 
 
 def _find_libreoffice_executable() -> str | None:
