@@ -62,17 +62,6 @@
       ]
     },
     {
-      "name": "car",
-      "label": "Введите название автомобиля",
-      "type": "string",
-      "required": true,
-      "aliases": [
-        "????",
-        "??????????",
-        "????? ????"
-      ]
-    },
-    {
       "name": "vin_nomer",
       "label": "Введите VIN номер",
       "type": "string",
